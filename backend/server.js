@@ -5,6 +5,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { createClient } = require("@supabase/supabase-js");
 
+// Log environment variables for debugging
+console.log("Server is starting...");
+console.log("Supabase URL:", process.env.SUPABASE_URL);
+console.log("JWT Secret:", process.env.JWT_SECRET ? "Set" : "Not Set");
+
 // Initialize Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -14,11 +19,12 @@ app.use(cors());
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Root route
 app.get("/", (req, res) => {
     res.send("Backend is running successfully!");
 });
 
-// ** User Registration **
+// User Registration
 app.post("/register", async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
 
@@ -41,20 +47,26 @@ app.post("/register", async (req, res) => {
         .insert([{ name, email, password: hashedPassword }]);
 
     if (error) {
+        console.error("Registration error:", error);
         return res.status(400).json({ error: error.message });
     }
 
     res.json({ message: "User registered successfully!" });
 });
 
-// ** User Login **
+// User Login
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     // Fetch user from Supabase
-    const { data, error } = await supabase.from("users").select("*").eq("email", email.toLowerCase()).single();
+    const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email.toLowerCase())
+        .single();
 
     if (error || !data) {
+        console.error("Login error:", error);
         return res.status(400).json({ error: "User not found" });
     }
 
@@ -71,4 +83,5 @@ app.post("/login", async (req, res) => {
 });
 
 // Start Server
-app.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
