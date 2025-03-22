@@ -12,7 +12,7 @@ const app = express();
 
 // Enable CORS for your frontend origin
 app.use(cors({
-  origin: "https://tech-symposium.vercel.app", // Replace with your frontend URL
+  origin: "https://jigyasa2025.vercel.app/", // Replace with your frontend URL
   credentials: true, // Allow cookies and credentials
 }));
 
