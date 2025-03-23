@@ -50,14 +50,16 @@ app.post("/register", async (req, res) => {
   // Insert into Supabase
   const { data, error } = await supabase
     .from("users")
-    .insert([{ name, email, password: hashedPassword }]);
+    .insert([{ name, email, password: hashedPassword }])
+    .select(); // Return the inserted data
 
   if (error) {
     console.error("Registration error:", error);
     return res.status(400).json({ error: error.message });
   }
 
-  res.json({ message: "User registered successfully!" });
+  // Return the user data (including name) in the response
+  res.json({ message: "User registered successfully!", user: data[0] });
 });
 
 // User Login
@@ -85,13 +87,8 @@ app.post("/login", async (req, res) => {
   // Generate JWT token
   const token = jwt.sign({ id: data.id, email: data.email, name: data.name }, JWT_SECRET, { expiresIn: "1h" });
 
-  // Return token and user data
-  res.json({
-    token,
-    id: data.id,
-    name: data.name,
-    email: data.email,
-  });
+  // Return the user data (including name) in the response
+  res.json({ token, user: { id: data.id, name: data.name, email: data.email } });
 });
 
 // Start Server
