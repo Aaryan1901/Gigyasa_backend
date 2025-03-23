@@ -44,6 +44,22 @@ app.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Passwords do not match" });
   }
 
+  // Check if the email already exists
+  const { data: existingUser, error: fetchError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email.toLowerCase())
+    .single();
+
+  if (fetchError && fetchError.code !== "PGRST116") { // PGRST116 is the code for "No rows found"
+    console.error("Error checking existing user:", fetchError);
+    return res.status(500).json({ error: "An error occurred while checking the email" });
+  }
+
+  if (existingUser) {
+    return res.status(400).json({ error: "Email already exists" });
+  }
+
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
 
