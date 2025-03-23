@@ -50,14 +50,16 @@ app.post("/register", async (req, res) => {
   // Insert into Supabase
   const { data, error } = await supabase
     .from("users")
-    .insert([{ name, email, password: hashedPassword }]);
+    .insert([{ name, email, password: hashedPassword }])
+    .select(); // Add .select() to return the inserted data
 
   if (error) {
     console.error("Registration error:", error);
     return res.status(400).json({ error: error.message });
   }
 
-  res.json({ message: "User registered successfully!" });
+  // Return the inserted user data
+  res.json({ message: "User registered successfully!", user: data[0] });
 });
 
 // User Login
