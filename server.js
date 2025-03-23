@@ -50,16 +50,14 @@ app.post("/register", async (req, res) => {
   // Insert into Supabase
   const { data, error } = await supabase
     .from("users")
-    .insert([{ name, email, password: hashedPassword }])
-    .select(); // Return the inserted data
+    .insert([{ name, email, password: hashedPassword }]);
 
   if (error) {
     console.error("Registration error:", error);
     return res.status(400).json({ error: error.message });
   }
 
-  // Return the user data (including name) in the response
-  res.json({ message: "User registered successfully!", user: data[0] });
+  res.json({ message: "User registered successfully!" });
 });
 
 // User Login
@@ -87,8 +85,33 @@ app.post("/login", async (req, res) => {
   // Generate JWT token
   const token = jwt.sign({ id: data.id, email: data.email, name: data.name }, JWT_SECRET, { expiresIn: "1h" });
 
-  // Return the user data (including name) in the response
-  res.json({ token, user: { id: data.id, name: data.name, email: data.email } });
+  res.json({ token, name: data.name, email: data.email, id: data.id });
+});
+
+// Fetch user details
+app.get("/user", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", decoded.id)
+      .single();
+
+    if (error || !data) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    res.json({ id: data.id, name: data.name, email: data.email });
+  } catch (error) {
+    res.status(401).json({ error: "Invalid token" });
+  }
 });
 
 // Start Server
